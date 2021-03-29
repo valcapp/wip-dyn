@@ -4,7 +4,7 @@
     "description": "An app that generates and runs an interface on top of a system-dynamics model.",
     "main": "app.js",
     "scripts": {
-        "build": "node build",
+        "prepare": "node build",
         "reset": "node build fromScratch",
         "start": "node app openAtStart",
         "build-start": "node app mdlChanged openAtStart",
