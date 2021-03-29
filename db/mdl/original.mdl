@@ -1,0 +1,686 @@
+{UTF-8}
+work completion  = 
+        MIN ( Active WIP 
+                  / TIME STEP , 
+             effective work capacity ) 
+	~	Item/Week
+	~	Current rate work is progressed to completion
+	|
+
+effective work capacity  = 
+        capacity 
+             * effectiveness 
+	~	Item/Week
+	~	Current effective capacity of the system to perform work
+	|
+
+planned work capacity  = 
+        capacity 
+             * current planned utilisation 
+	~	Item/Week
+	~	Capacity used in the planning and management of the work flow
+	|
+
+Effective Active WIP  = 
+        Work In Progress 
+             - ( work blocked 
+                  * current blocked work deemed active ) 
+	~	Item
+	~	Number of items in "work in progress" when calculating the amount of new \
+		items to pull through from the backlog.
+	|
+
+current blocked work deemed active  = 
+        SMOOTH ( if then else ( Time 
+                       >= time introduce improved policy , 
+                  blocked work deemed active , 
+                  initial blocked work deemed active ) , 
+             response period ) 
+	~	Dmnl
+	~	Proportion of currently blocked work still deemed to be active. If = 1, \
+		then all blocked work would be ignored for the purposes of drawing through \
+		further work from the backlog. If = 0, this would mean that the system \
+		would account for blocked work when calculating how much additional work \
+		should be pulled through, leading to better WIP management
+	|
+
+current planned utilisation  = 
+        SMOOTH ( if then else ( Time 
+                       >= time introduce improved policy , 
+                  planned utilisation , 
+                  initial planned utilisation ) , 
+             response period ) 
+	~	Dmnl
+	~	Current utilisation of available capacity planned
+	|
+
+current proportion of work items blocked  = 
+        SMOOTH ( if then else ( Time 
+                       >= time introduce improved policy , 
+                  proportion of work items blocked , 
+                  initial proportion of work items blocked ) , 
+             response period ) 
+	~	Dmnl
+	~	Proportion of all work items currently blocked
+	|
+
+initial proportion of work items blocked  = 0.2
+	~	Dmnl
+	~	Proportion of all work items currently blocked
+	|
+
+current WIP adj policy  = 
+        SMOOTH ( if then else ( Time 
+                       >= time introduce improved policy , 
+                  WIP adj policy , 
+                  initial WIP adj policy ) , 
+             response period ) 
+	~	Dmnl
+	~	Proportion of adjustment in WIP as a result of "Limit Work in Progress" \
+		practice
+	|
+
+work variability effect  = 
+        1
+             - MIN ( 1, 
+                  XIDZ ( optimal utilisation , 
+                       current planned utilisation , 
+                       1) 
+                       ^ work variability elasticity ) 
+	~	Dmnl
+	~	If Planned Utilisation is higher than good practice, then work variability \
+		can cause disruption to effective delivery. Lower levels of utilisation \
+		allow for this and mitigate the effects.
+	|
+
+initial planned utilisation  = 1
+	~	Dmnl
+	~	Current utilisation of available capacity planned
+	|
+
+initial blocked work deemed active  = 1
+	~	Dmnl
+	~	Proportion of currently blocked work still deemed to be active. If = 1, \
+		then all blocked work would be ignored for the purposes of drawing through \
+		further work from the backlog. If = 0, this would mean that the system \
+		would account for blocked work when calculating how much additional work \
+		should be pulled through, leading to better WIP management
+	|
+
+work blocked  = 
+        Work In Progress 
+             * current proportion of work items blocked 
+	~	Item
+	~	Current number of work items blocked
+	|
+
+initial WIP adj policy  = 0
+	~	Dmnl
+	~	Proportion of adjustment in WIP as a result of "Limit Work in Progress" \
+		practice
+	|
+
+adjustment for WIP  = 
+        MAX ( 0, 
+             current WIP adj policy ) 
+             * ( optimal WIP 
+                  - Effective Active WIP ) 
+             / WIP adj time 
+	~	Item/Week
+	~	Adjustment to the pull from backlog as a result of assessing capacity and \
+		true ability to manage the work in progress
+	|
+
+awareness of capacity  = 
+        SMOOTH ( planned work capacity 
+                  - ( planned work capacity 
+                       - effective work capacity ) 
+                       * current visibility of true capacity , 
+             response period ) 
+	~	Item/Week
+	~	Awareness of capacity in the system is somewhere between the true \
+		"effective capacity" and the "planned capacity". Accuracy in this \
+		assessment is improved through increased visibility of the true capacity
+	|
+
+current visibility of true capacity  = 
+        if then else ( Time 
+                  >= time introduce improved policy , 
+             visibility of true capacity , 
+             initial visibility of true capacity ) 
+	~	Dmnl
+	~	0 = assumed capacity is as planned. 1 = assumed capacity is accurate \
+		reflection of actual capacity. Moving from 0 to 1 shows greater awareness \
+		of true capacity
+	|
+
+time introduce improved policy  = 12
+	~	Week
+	~	Weeks into scenario when new policies (if any) are introduced
+	|
+
+initial visibility of true capacity  = 0
+	~	Dmnl
+	~	0 = assumed capacity is as planned. 1 = assumed capacity is accurate \
+		reflection of actual capacity. Moving from 0 to 1 shows greater awareness \
+		of true capacity
+	|
+
+work variability elasticity  = 1
+	~	Dmnl [0.75,1.25,0.01]
+	~	Sensitivity of the effects of work variability to the relationship between \
+		planned utilisation and good practice
+	|
+
+effectiveness  = 
+        SMOOTH ( ( 1
+                  - context switching ) 
+                  * ( 1
+                       - work variability effect ) , 
+             effectiveness response period ) 
+	~	Dmnl
+	~	Current effectiveness (0-1 scale)
+	|
+
+cycle time  = 
+        ZIDZ ( Work In Progress , 
+             work completion ) 
+	~	Week
+	~	Current cycle time - the time taken for items of work to be competed
+	|
+
+Initial Work In Progress  = 5
+	~	Item
+	~	Work in progress at the start of the simulated period
+	|
+
+pull work from backlog  = 
+        awareness of capacity 
+             + adjustment for WIP 
+	~	Item/Week
+	~	Rate new items are pulled from the backlog to be worked on
+	|
+
+Active WIP  = 
+        Work In Progress 
+             - work blocked 
+	~	Item
+	~	Current number of work items (i.e. those not currently blocked)
+	|
+
+blocked work deemed active  = 0
+	~	Dmnl [0,1,0.01]
+	~	Proportion of currently blocked work still deemed to be active. If = 1, \
+		then all blocked work would be ignored for the purposes of drawing through \
+		further work from the backlog. If = 0, this would mean that the system \
+		would account for blocked work when calculating how much additional work \
+		should be pulled through, leading to better WIP management
+	|
+
+proportion of work items blocked  = 0
+	~	Dmnl [0,0.7,0.01]
+	~	Proportion of all work items currently blocked
+	|
+
+visibility of true capacity  = 1
+	~	Dmnl [0,1,0.01]
+	~	0 = assumed capacity is as planned. 1 = assumed capacity is accurate \
+		reflection of actual capacity. Moving from 0 to 1 shows greater awareness \
+		of true capacity
+	|
+
+capacity  = 10
+	~	Item/Week [5,20,1]
+	~	Current capacity available to be allocated for the completion of work
+	|
+
+response period  = 12
+	~	Week [4,52,1]
+	~	Period over which the system becomes aware of it's current capacity
+	|
+
+context switching  = 
+        1
+             - MIN ( 1, 
+                  XIDZ ( optimal WIP , 
+                       Work In Progress , 
+                       1) 
+                       ^ context switching elasticity ) 
+	~	Dmnl
+	~	If Work In Progress is higher than the work the system can handle, then \
+		instances of context switching may occur. Context switching reduces the \
+		effectiveness of the system as teams switch between items of work.
+	|
+
+context switching elasticity  = 0.3
+	~	Dmnl [0,0.75,0.01]
+	~	Sensitivity of context switching to the relationship between current WIP \
+		and optimal WIP
+	|
+
+effectiveness response period  = 4
+	~	Week [1,12,0.5]
+	~	Period over which effectiveness responds to changing influences upon it
+	|
+
+GT Unit : Lab 1
+	~	
+	~		|
+
+minimum cycle time  == 
+        3
+	~	Week [1,5]
+	~	Time to complete work should there be no disruption or reduction in \
+		effectiveness
+	|
+
+optimal capacity  = 
+        capacity 
+             * optimal utilisation 
+	~	Item/Week
+	~	Capacity to complete work should the optimal utilisation be used.
+	|
+
+optimal utilisation  == 
+        0.7
+	~	Dmnl
+	~	Utilisation of available capacity that should be planned for, in order to \
+		account for variability in the work without causing disruption
+	|
+
+optimal WIP  = 
+        optimal capacity 
+             * minimum cycle time 
+	~	Item
+	~	Amount of Work in Progress (WIP) that should be maintained in order to \
+		avoid inefficiencies such as context switching
+	|
+
+planned utilisation  = 0.7
+	~	Dmnl [0.5,1,0.01]
+	~	Current utilisation of available capacity planned
+	|
+
+WIP adj policy  = 1
+	~	Dmnl [0,1,0.01]
+	~	Proportion of adjustment in WIP as a result of "Limit Work in Progress" \
+		practice
+	|
+
+WIP adj time  = 12
+	~	Week [2,38,0.25]
+	~	Period over which adjustments to WIP are made
+	|
+
+Work In Progress  = 
+        INTEG( pull work from backlog 
+                  - work completion , 
+             Initial Work In Progress ) 
+	~	Item
+	~	Current work in progress
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 52
+	~	Week
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Week
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Week [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.25
+	~	Week [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Model
+$192-192-192,0,Segoe UI|10||0-0-0|0-0-0|160-160-160|-1--1--1|255-255-255|96,96,5,0
+10,1,Work In Progress,1235,708,57,44,3,131,0,4,0,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+12,2,48,1599,712,28,15,0,3,0,4,-1,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+1,3,5,2,4,0,0,22,0,0,0,-1--1--1,,1|(1512,712)|
+1,4,5,1,100,0,0,22,1,0,0,255-0-0,|12||0-0-0,1|(1363,712)|
+11,5,48,1443,712,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,work completion,1443,732,56,16,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,Initial Work In Progress,1240,857,48,23,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,8,7,1,1,0,83,0,2,192,1,-1--1--1,|12||0-0-0,1|(1204,799)|
+10,9,effective work capacity,1607,548,48,23,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,minimum cycle time,1156,436,64,16,8,131,0,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,11,9,5,1,0,83,13,3,64,0,0-128-0,|12||0-0-0,1|(1547,648)|
+10,12,cycle time,1344,840,44,25,3,131,0,1,0,5,0,0,0-64-128,0-64-128,|12||0-0-0,0,0,0,0,0,0
+10,13,response period,1552,1013,61,16,8,130,0,11,0,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,14,43,53,1,0,83,13,3,192,0,0-128-0,|12||0-0-0,1|(1043,909)|
+10,15,planned work capacity,1703,353,45,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,16,0,2191,357,216,148,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+cycle time,Graph
+12,17,0,288,604,204,544,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+Work In Progress,Causes Strip
+10,18,context switching,1295,417,56,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,19,context switching elasticity,1236,321,56,23,8,3,0,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,20,optimal WIP,1099,336,41,16,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,21,optimal capacity,1191,244,53,16,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,22,capacity,1436,101,40,20,3,3,0,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,23,planned utilisation,1723,85,51,27,3,131,0,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,24,optimal utilisation,1099,144,57,16,8,131,0,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,25,24,21,1,0,83,0,2,192,0,-1--1--1,|12||0-0-0,1|(1128,200)|
+1,26,21,20,1,0,83,0,0,192,0,-1--1--1,,1|(1124,269)|
+1,27,10,20,1,0,83,2,0,192,0,-1--1--1,,1|(1119,396)|
+1,28,1,18,1,0,83,13,1,192,0,0-128-0,|12||0-0-0,1|(1199,568)|
+1,29,19,18,1,0,83,2,0,192,0,-1--1--1,,1|(1279,360)|
+1,30,20,18,1,0,79,0,0,192,0,-1--1--1,,1|(1159,373)|
+10,31,effectiveness,1456,355,43,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,32,18,31,1,0,79,13,1,192,0,255-0-0,|12||0-0-0,1|(1344,380)|
+10,33,effectiveness response period,1408,272,52,23,8,3,0,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,34,33,31,1,0,0,2,0,64,0,-1--1--1,,1|(1448,311)|
+1,35,31,9,1,0,83,13,3,64,0,0-128-0,|12||0-0-0,1|(1580,447)|
+12,36,0,2191,699,220,151,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+effectiveness,Graph
+10,37,adjustment for WIP,899,536,61,16,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,38,WIP adj time,811,605,44,16,8,131,0,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,39,38,37,1,0,0,0,2,128,0,-1--1--1,|12||0-0-0,1|(839,557)|
+10,40,WIP adj policy,756,384,48,16,3,131,0,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+1,41,20,37,1,0,83,0,0,192,0,-1--1--1,,1|(984,412)|
+10,42,visibility of true capacity,1484,1097,63,32,3,131,0,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,43,awareness of capacity,1443,952,43,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,44,13,43,1,0,0,0,0,64,0,-1--1--1,,1|(1488,985)|
+12,45,0,1451,489,36,36,4,135,0,8,-1,0,0,0,0-0-0,0-0-0,|9||0-0-0,0,0,0,0,0,0
+R2 - excessive WIP
+12,46,0,967,624,36,36,5,135,0,8,-1,0,0,0,-1--1--1,0-0-0,|9||0-0-0,0,0,0,0,0,0
+B3 - Limit Work in Progress
+1,47,22,21,4,0,0,13,1,64,0,128-128-192,|12||0-0-0,3|(1296,101)|(1196,101)|(1196,164)|
+1,48,22,9,4,0,0,13,1,64,0,128-128-192,|12||0-0-0,3|(1548,101)|(1619,101)|(1619,312)|
+12,49,48,768,708,28,15,0,3,0,4,-1,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+1,50,52,1,4,0,0,22,3,0,0,0-128-0,|12||0-0-0,1|(1064,708)|
+1,51,52,49,100,0,0,22,0,0,0,-1--1--1,,1|(863,708)|
+11,52,48,943,708,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,53,pull work from backlog,943,737,48,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,54,9,43,1,0,83,2,3,64,0,0-128-0,|12||0-0-0,1|(1632,752)|
+1,55,15,43,1,0,83,2,0,192,0,-1--1--1,,1|(1731,692)|
+1,56,1,12,4,0,0,13,1,64,0,0-64-128,|12||0-0-0,3|(1240,792)|(1240,836)|(1268,836)|
+1,57,6,12,4,0,0,13,1,64,0,0-64-128,|12||0-0-0,3|(1443,789)|(1443,833)|(1416,833)|
+10,58,proportion of work items blocked,904,896,64,41,3,131,0,5,0,5,0,0,128-128-192,208-223-247,|12||0-0-0,0,0,0,0,0,0
+10,59,work blocked,1067,644,44,16,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,60,1,59,1,0,83,0,2,192,0,-1--1--1,|12||0-0-0,1|(1143,696)|
+10,61,Effective Active WIP,1087,537,64,16,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+1,62,1,61,1,0,83,13,1,192,0,0-128-0,|12||0-0-0,1|(1147,588)|
+1,63,59,61,1,0,79,0,0,192,0,-1--1--1,,1|(1064,593)|
+1,64,61,37,1,0,79,13,1,192,0,255-0-0,|12||0-0-0,1|(1008,512)|
+10,65,blocked work deemed active,931,236,57,33,3,131,0,5,0,5,0,0,128-128-192,208-223-247,|12||208-223-247,0,0,0,0,0,0
+10,66,Active WIP,1264,608,36,16,8,131,0,10,0,0,0,0,-1--1--1,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,67,1,66,1,0,83,0,0,192,0,-1--1--1,,1|(1235,648)|
+1,68,59,66,1,0,79,0,0,192,0,-1--1--1,,1|(1148,597)|
+1,69,37,52,1,0,83,13,3,64,0,0-128-0,|12||128-128-128,1|(896,649)|
+10,70,work variability effect,1503,256,49,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,71,24,70,1,0,0,0,0,64,0,-1--1--1,,1|(1291,161)|
+10,72,work variability elasticity,1551,161,49,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,73,72,70,1,0,0,0,0,64,0,-1--1--1,,1|(1512,200)|
+1,74,70,31,1,0,79,0,0,192,0,-1--1--1,,1|(1467,300)|
+10,75,time introduce improved policy,587,552,52,23,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,76,Time,667,569,29,16,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,77,initial WIP adj policy,559,452,64,16,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,78,current WIP adj policy,756,489,52,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,79,40,78,0,0,0,13,3,64,0,128-128-192,|12||0-0-0,1|(756,421)|
+1,80,77,78,1,0,0,0,0,64,0,-1--1--1,,1|(647,448)|
+1,81,75,78,1,0,0,0,0,64,0,-1--1--1,,1|(655,505)|
+1,82,76,78,0,0,0,0,0,64,0,-1--1--1,,1|(699,540)|
+1,83,78,37,1,0,0,0,0,64,0,-1--1--1,,1|(831,493)|
+10,84,time introduce improved policy,1263,1173,56,23,8,2,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+10,85,initial visibility of true capacity,1156,1108,56,23,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,86,current visibility of true capacity,1347,1045,59,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,87,85,86,1,0,0,0,0,64,0,-1--1--1,,1|(1232,1069)|
+1,88,84,86,1,0,0,0,0,64,0,-1--1--1,,1|(1276,1100)|
+1,89,86,43,1,0,0,0,0,64,0,-1--1--1,,1|(1415,996)|
+10,90,Time,1535,1155,29,16,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,91,90,86,0,16,0,0,0,64,0,-1--1--1,,1|(1455,1108)|
+1,92,42,86,4,0,0,13,3,64,0,128-128-192,|12||0-0-0,3|(1387,1101)|(1355,1101)|(1355,1084)|
+10,93,response period,675,615,61,16,8,130,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,94,93,78,1,0,0,0,0,64,0,-1--1--1,,1|(740,545)|
+10,95,initial planned utilisation,1871,129,48,23,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,96,current planned utilisation,1724,216,51,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,97,time introduce improved policy,1863,269,56,23,8,2,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,98,23,96,0,0,0,13,3,64,0,128-128-192,|12||0-0-0,1|(1724,144)|
+1,99,97,96,1,0,0,0,0,64,0,-1--1--1,,1|(1775,253)|
+1,100,95,96,1,0,0,0,0,64,0,-1--1--1,,1|(1788,160)|
+1,101,96,70,1,0,0,0,0,64,0,-1--1--1,,1|(1587,216)|
+1,102,96,15,1,0,0,0,0,64,0,-1--1--1,,1|(1723,295)|
+10,103,Time,1932,328,29,16,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,104,103,96,0,16,0,0,0,64,0,-1--1--1,,1|(1841,277)|
+10,105,response period,1879,185,61,16,8,2,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,106,105,96,1,0,0,0,0,64,0,-1--1--1,,1|(1827,216)|
+10,107,initial blocked work deemed active,816,141,61,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,108,current blocked work deemed active,932,360,63,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,109,107,108,1,0,0,0,0,64,0,-1--1--1,,1|(835,245)|
+1,110,65,108,0,0,0,13,3,64,0,128-128-192,|12||0-0-0,1|(932,291)|
+10,111,response period,1059,235,61,16,8,130,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,112,111,108,1,0,0,0,0,64,0,-1--1--1,,1|(1031,327)|
+10,113,time introduce improved policy,743,256,56,23,8,2,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,114,113,108,1,0,0,0,0,64,0,-1--1--1,,1|(811,316)|
+10,115,Time,919,284,29,16,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,116,115,108,1,16,0,0,0,64,0,-1--1--1,,1|(795,316)|
+1,117,108,61,1,0,0,0,0,64,0,-1--1--1,,1|(1040,424)|
+10,118,initial proportion of work items blocked,1147,920,64,23,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,119,current proportion of work items blocked,1091,793,59,31,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,120,118,119,1,0,0,0,0,64,0,-1--1--1,,1|(1159,848)|
+10,121,response period,1084,871,61,16,8,130,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+10,122,time introduce improved policy,1039,992,56,23,8,2,0,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,123,122,119,1,0,0,0,0,64,0,-1--1--1,,1|(1019,872)|
+1,124,121,119,1,0,0,0,0,64,0,-1--1--1,,1|(1104,840)|
+1,125,119,59,1,0,0,0,0,64,0,-1--1--1,,1|(1051,713)|
+10,126,Time,1108,992,29,16,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,127,126,119,0,16,0,0,0,64,0,-1--1--1,,1|(1100,908)|
+1,128,58,119,4,0,0,13,3,64,0,128-128-192,|12||0-0-0,3|(899,825)|(899,797)|(965,797)|
+1,129,22,15,4,0,0,13,3,64,0,128-128-192,|12||0-0-0,4|(1548,101)|(1619,101)|(1619,360)|(1640,360)|
+1,130,66,5,1,0,83,0,0,192,0,-1--1--1,,1|(1356,617)|
+10,131,TIME STEP,1724,788,44,16,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,132,131,6,0,16,0,0,0,64,0,-1--1--1,,1|(1595,761)|
+12,133,0,1543,87,56,12,0,7,0,0,-1,0,0,0,0,0,0,0,0,0
+= 10 items / week
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Story Telling
+$192-192-192,0,Segoe UI|12||0-0-0|0-0-0|160-160-160|-1--1--1|-1--1--1|96,96,5,0
+10,1,Work In Progress,1304,713,57,44,3,131,0,4,0,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+12,2,48,1668,717,12,8,0,3,0,4,-1,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+1,3,5,2,4,0,0,22,0,0,0,-1--1--1,,1|(1589,717)|
+1,4,5,1,100,0,0,22,1,0,0,255-0-0,|12||0-0-0,1|(1432,717)|
+11,5,48,1512,717,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,work completion,1512,749,48,24,40,131,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,Initial Work In Progress,1307,868,48,23,8,3,14,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,8,7,1,1,14,83,0,2,192,1,-1--1--1,|12||0-0-0,1|(1271,808)|
+10,9,effective work capacity,1676,553,55,28,8,131,0,0,0,0,0,0,0,0,0,0,0,0
+10,10,minimum cycle time,1223,441,52,24,8,131,14,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,11,9,5,1,0,83,13,3,64,0,0-128-0,|12||0-0-0,1|(1616,653)|
+10,12,cycle time,1411,845,44,25,3,131,0,1,0,5,0,0,0-64-128,0-64-128,|12||0-0-0,0,0,0,0,0,0
+10,13,response period,1619,1024,45,17,8,130,14,11,0,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,14,43,53,1,0,83,13,3,192,0,0-128-0,|12||0-0-0,1|(1112,920)|
+10,15,planned work capacity,1772,364,56,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+12,16,0,2256,520,216,148,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+cycle time,Graph
+12,17,0,336,624,204,544,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+Work In Progress,Causes Strip
+10,18,context switching,1364,428,39,28,8,3,1,0,0,0,0,0,0,0,0,0,0,0
+10,19,context switching elasticity,1303,332,56,23,8,3,14,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,20,optimal WIP,1168,341,49,16,8,131,1,0,0,0,0,0,0,0,0,0,0,0
+10,21,optimal capacity,1260,249,44,24,8,131,1,0,0,0,0,0,0,0,0,0,0,0
+10,22,capacity,1503,112,40,20,3,3,0,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,23,planned utilisation,1792,96,51,27,3,131,5,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,24,optimal utilisation,1168,149,57,16,8,131,1,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,25,24,21,1,1,83,0,2,192,0,-1--1--1,|12||0-0-0,1|(1195,205)|
+1,26,21,20,1,1,83,0,0,192,0,-1--1--1,,1|(1191,280)|
+1,27,10,20,1,14,83,2,0,192,0,-1--1--1,,1|(1188,401)|
+1,28,1,18,1,1,83,13,1,192,0,0-128-0,|12||0-0-0,1|(1268,573)|
+1,29,19,18,1,14,83,2,0,192,0,-1--1--1,,1|(1348,365)|
+1,30,20,18,1,1,79,0,0,192,0,-1--1--1,,1|(1228,384)|
+10,31,effectiveness,1523,364,51,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,32,18,31,1,1,79,13,1,192,0,255-0-0,|12||0-0-0,1|(1411,385)|
+10,33,effectiveness response period,1475,277,52,23,8,3,14,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,34,33,31,1,14,0,2,0,64,0,-1--1--1,,1|(1515,320)|
+1,35,31,9,1,0,83,13,3,64,0,0-128-0,|12||0-0-0,1|(1647,456)|
+12,36,0,2263,836,220,151,3,188,0,0,2,0,0,0,0,0,0,0,0,0
+effectiveness,Graph
+10,37,adjustment for WIP,968,541,60,28,8,131,2,0,0,0,0,0,0,0,0,0,0,0
+10,38,WIP adj time,880,616,44,16,8,131,2,8,0,0,0,0,-1--1--1,0-0-0,|10||0-0-0,0,0,0,0,0,0
+1,39,38,37,1,2,0,0,2,128,0,-1--1--1,|12||0-0-0,1|(908,568)|
+10,40,WIP adj policy,823,389,44,25,3,131,2,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+1,41,20,37,1,2,83,0,0,192,0,-1--1--1,,1|(1051,417)|
+10,42,visibility of true capacity,1551,1108,63,32,3,131,4,5,0,5,0,0,128-128-192,208-223-247,|8||0-0-0,0,0,0,0,0,0
+10,43,awareness of capacity,1512,957,52,28,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,44,13,43,1,14,0,0,0,64,0,-1--1--1,,1|(1555,996)|
+12,45,0,1520,500,36,36,4,135,1,8,-1,0,0,0,0-0-0,0-0-0,|9||0-0-0,0,0,0,0,0,0
+R2 - excessive WIP
+12,46,0,1036,629,36,36,5,135,2,8,-1,0,0,0,-1--1--1,0-0-0,|9||0-0-0,0,0,0,0,0,0
+B3 - Limit Work in Progress
+1,47,22,21,4,1,0,13,1,64,0,128-128-192,|12||0-0-0,3|(1363,112)|(1263,112)|(1263,167)|
+1,48,22,9,4,0,0,13,1,64,0,128-128-192,|12||0-0-0,3|(1616,112)|(1688,112)|(1688,317)|
+12,49,48,835,713,12,8,0,3,0,4,-1,0,0,0,0-0-0,194-232-193,|12||0-0-0,0,0,0,0,0,0
+1,50,52,1,4,0,0,22,3,0,0,0-128-0,|12||0-0-0,1|(1133,713)|
+1,51,52,49,100,0,0,22,0,0,0,-1--1--1,,1|(924,713)|
+11,52,48,1012,713,8,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,53,pull work from backlog,1012,749,57,28,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,54,9,43,1,0,83,2,3,64,0,0-128-0,|12||0-0-0,1|(1699,757)|
+1,55,15,43,1,0,83,2,0,192,0,-1--1--1,,1|(1800,697)|
+1,56,1,12,4,0,0,13,1,64,0,0-64-128,|12||0-0-0,3|(1307,799)|(1307,841)|(1337,841)|
+1,57,6,12,4,0,0,13,1,64,0,0-64-128,|12||0-0-0,3|(1512,807)|(1512,844)|(1483,844)|
+10,58,proportion of work items blocked,971,901,64,41,3,131,3,5,0,5,0,0,128-128-192,208-223-247,|12||0-0-0,0,0,0,0,0,0
+10,59,work blocked,1136,649,53,16,8,131,1,0,0,0,0,0,0,0,0,0,0,0
+1,60,1,59,1,1,83,0,2,192,0,-1--1--1,|12||0-0-0,1|(1212,701)|
+10,61,Effective Active WIP,1156,548,59,28,8,131,2,0,0,0,0,0,0,0,0,0,0,0
+1,62,1,61,1,2,83,13,1,192,0,0-128-0,|12||0-0-0,1|(1216,593)|
+1,63,59,61,1,2,79,0,0,192,0,-1--1--1,,1|(1131,604)|
+1,64,61,37,1,2,79,13,1,192,0,255-0-0,|12||0-0-0,1|(1075,517)|
+10,65,blocked work deemed active,1000,241,57,33,3,131,3,5,0,5,0,0,128-128-192,208-223-247,|12||208-223-247,0,0,0,0,0,0
+10,66,Active WIP,1376,616,36,16,8,131,15,10,0,0,0,0,-1--1--1,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,67,1,66,1,15,83,0,0,192,0,-1--1--1,,1|(1304,653)|
+1,68,59,66,1,15,79,0,0,192,0,-1--1--1,,1|(1215,608)|
+1,69,37,52,1,2,83,13,3,64,0,0-128-0,|12||128-128-128,1|(963,660)|
+10,70,work variability effect,1572,261,57,21,8,3,1,0,0,0,0,0,0,0,0,0,0,0
+1,71,24,70,1,1,0,0,0,64,0,-1--1--1,,1|(1360,172)|
+10,72,work variability elasticity,1620,172,57,21,8,3,14,0,-1,0,0,0,0,0,0,0,0,0
+1,73,72,70,1,14,0,0,0,64,0,-1--1--1,,1|(1579,205)|
+1,74,70,31,1,1,79,0,0,192,0,-1--1--1,,1|(1536,305)|
+10,75,time introduce improved policy,656,557,52,17,8,3,2,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,76,Time,781,581,32,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+10,77,initial WIP adj policy,628,457,44,17,8,3,2,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,78,current WIP adj policy,823,500,57,21,8,3,2,0,0,0,0,0,0,0,0,0,0,0
+1,79,40,78,0,2,0,13,3,64,0,128-128-192,|12||0-0-0,1|(823,436)|
+1,80,77,78,1,2,0,0,0,64,0,-1--1--1,,1|(716,453)|
+1,81,75,78,1,2,0,0,0,64,0,-1--1--1,,1|(724,516)|
+1,82,76,78,0,16,0,0,0,64,0,-1--1--1,,1|(796,552)|
+1,83,78,37,1,2,0,0,0,64,0,-1--1--1,,1|(900,504)|
+10,84,time introduce improved policy,1332,1184,55,17,8,2,4,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+10,85,initial visibility of true capacity,1223,1113,52,17,8,3,4,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,86,current visibility of true capacity,1416,1056,68,21,8,3,4,0,0,0,0,0,0,0,0,0,0,0
+1,87,85,86,1,4,0,0,0,64,0,-1--1--1,,1|(1299,1080)|
+1,88,84,86,1,4,0,0,0,64,0,-1--1--1,,1|(1343,1105)|
+1,89,86,43,1,4,0,0,0,64,0,-1--1--1,,1|(1484,1001)|
+10,90,Time,1480,1165,32,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,91,90,86,0,16,0,0,0,64,0,-1--1--1,,1|(1456,1120)|
+1,92,42,86,4,4,0,13,3,64,0,128-128-192,|12||0-0-0,3|(1456,1112)|(1424,1112)|(1424,1092)|
+10,93,response period,744,624,48,19,8,130,2,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,94,93,78,1,2,0,0,0,64,0,-1--1--1,,1|(807,556)|
+10,95,initial planned utilisation,1940,140,43,17,8,3,5,8,0,0,0,0,0-0-0,0-0-0,|10||0-0-0,0,0,0,0,0,0
+10,96,current planned utilisation,1791,221,60,21,8,3,5,0,0,0,0,0,0,0,0,0,0,0
+10,97,time introduce improved policy,1932,280,55,17,8,2,5,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,98,23,96,0,5,0,13,3,64,0,128-128-192,|12||0-0-0,1|(1791,151)|
+1,99,97,96,1,5,0,0,0,64,0,-1--1--1,,1|(1844,264)|
+1,100,95,96,1,5,0,0,0,64,0,-1--1--1,,1|(1855,165)|
+1,101,96,70,1,5,0,0,0,64,0,-1--1--1,,1|(1656,221)|
+1,102,96,15,1,5,0,0,0,64,0,-1--1--1,,1|(1792,304)|
+10,103,Time,1877,336,32,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,104,103,96,0,16,0,0,0,64,0,-1--1--1,,1|(1841,288)|
+10,105,response period,1948,196,60,12,8,2,5,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,106,105,96,1,5,0,0,0,64,0,-1--1--1,,1|(1896,221)|
+10,107,initial blocked work deemed active,883,152,71,21,8,3,3,0,0,0,0,0,0,0,0,0,0,0
+10,108,current blocked work deemed active,999,365,80,21,8,3,3,0,0,0,0,0,0,0,0,0,0,0
+1,109,107,108,1,3,0,0,0,64,0,-1--1--1,,1|(904,256)|
+1,110,65,108,0,3,0,13,3,64,0,128-128-192,|12||0-0-0,1|(999,299)|
+10,111,response period,1112,245,45,20,8,130,3,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,112,111,108,1,3,0,0,0,64,0,-1--1--1,,1|(1087,332)|
+10,113,time introduce improved policy,812,261,55,17,8,2,3,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,114,113,108,1,3,0,0,0,64,0,-1--1--1,,1|(880,321)|
+10,115,Time,864,292,32,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,116,115,108,1,16,0,0,0,64,0,-1--1--1,,1|(864,321)|
+1,117,108,61,1,3,0,0,0,64,0,-1--1--1,,1|(1107,429)|
+10,118,initial proportion of work items blocked,1216,925,71,21,8,3,3,0,0,0,0,0,0,0,0,0,0,0
+10,119,current proportion of work items blocked,1160,804,80,21,8,3,3,0,0,0,0,0,0,0,0,0,0,0
+1,120,118,119,1,3,0,0,0,64,0,-1--1--1,,1|(1228,853)|
+10,121,response period,1151,880,48,19,8,130,3,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+10,122,time introduce improved policy,1108,997,55,17,8,2,3,11,-1,0,0,0,128-128-128,0-0-0,|10||128-128-128,0,0,0,0,0,0
+1,123,122,119,1,3,0,0,0,64,0,-1--1--1,,1|(1088,877)|
+1,124,121,119,1,3,0,0,0,64,0,-1--1--1,,1|(1171,845)|
+1,125,119,59,1,3,0,0,0,64,0,-1--1--1,,1|(1120,724)|
+10,126,Time,1053,1000,32,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,127,126,119,0,16,0,0,0,64,0,-1--1--1,,1|(1100,911)|
+1,128,58,119,4,3,0,13,3,64,0,128-128-192,|12||0-0-0,3|(968,833)|(968,808)|(1024,808)|
+1,129,22,15,4,0,0,13,3,64,0,128-128-192,|12||0-0-0,4|(1616,112)|(1688,112)|(1688,365)|(1701,365)|
+1,130,66,5,1,15,83,0,0,192,0,-1--1--1,,1|(1423,628)|
+10,131,TIME STEP,1669,796,49,12,8,2,16,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128,0,0,0,0,0,0
+1,132,131,6,0,16,0,0,0,64,0,-1--1--1,,1|(1601,776)|
+12,133,0,1612,96,65,12,0,7,0,0,-1,0,0,0,0,0,0,0,0,0
+= 10 items / week
+12,134,0,2108,96,136,17,0,7,32,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part I : Incomplete data
+12,135,0,2108,96,244,17,0,7,33,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part II : Too much WIP plus Blocked Work
+12,136,0,2108,96,123,17,0,7,34,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part III : Manage WIP
+12,137,0,2108,96,181,17,0,7,35,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part IV : Manage Blocked Work
+12,138,0,2108,96,257,17,0,7,36,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part V : Improve Visibility and Data Accuracy
+12,139,0,2108,96,189,17,0,7,37,40,-1,0,0,0,-1--1--1,0-0-0,Arial|20||0-0-0,0,0,0,0,0,0
+Part VI : Plan for Work Variability
+///---\\\
+:L<%^E!@
+1:Current.vdfx
+1:ReferenceMode.vdfx
+9:Current
+31:2,ReferenceMode
+32:6,Work In Progress
+33:(0,74.0602),(0,0),(14,77.8195),(27.75,61.5789),(42.25,10.4887),(52,8.79699),
+32:10,effectiveness
+33:(0.25,50),(4.25,56.015),(13,67.6692),(20,72.9323),(25,55.6391),(28.75,38.7218),(32.5,34.9624),(36.5,31.5789),(41.25,28.1955),(45.5,32.7068),
+13:ReferenceMode
+15:0,0,0,0,0,0
+19:5,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+4:Time
+5:minimum cycle time
+35:Date
+36:DD-MM
+37:2021
+38:1
+39:1
+40:3
+41:0
+76:0
+77:0
+78:0
+79:0
+80:0
+81:0
+24:0
+25:52
+26:52
+75:
+43:
+6:Lab 1
