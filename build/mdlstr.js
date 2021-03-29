@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const destinationDir = path.resolve(__dirname,'../db/mdl');
 const destination = path.resolve(destinationDir,'mdlstr.json');
-const modLoc = './build/mdlstr';
+const modLoc = './prep/mdlstr';
 
 /** writes the sd-model as raw string in the database
  * so that can be served by the app

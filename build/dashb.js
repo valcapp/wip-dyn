@@ -3,7 +3,7 @@ const fs = require("fs").promises;
 const { JSDOM } = require("jsdom");
 const jquery = require('jquery');
 const dashbPath = path.resolve(__dirname + '/../db/json/dashb.json');
-const modLoc = './build/dashb';
+const modLoc = './prep/dashb';
 
 /** check existance of file */
 const isThere = async pth => (

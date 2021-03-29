@@ -1,4 +1,4 @@
 cd ..
-docker build \
+docker prep \
 -t vens-dash:1.0 \
 .

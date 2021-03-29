@@ -10,6 +10,6 @@ node_modules
 /sd/
 /sd?/
 *.?mdl
-/build/vensim*
+/prep/vensim*
 /legacy
 /views/debug.ejs

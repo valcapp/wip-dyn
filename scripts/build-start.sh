@@ -1,2 +1,2 @@
 cd ..
-npm run build-start
+npm run prep-start

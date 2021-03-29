@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const dbPath = path.resolve(__dirname,'../db');
-const loc = './build/dbdir.';
+const loc = './prep/dbdir.';
 const getLogger = subLoc => (
     (...args) => console.log(loc+subLoc, ...args)
 );

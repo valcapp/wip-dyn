@@ -51,8 +51,8 @@ const setMdlPath = async () => {
 };
 
 /** Prepares files in database to be served by the app */
-const build = async () => {
-    console.log('Running build\n');
+const prep = async () => {
+    console.log('Running prep\n');
     setSdEnv();
     await setMdlPath();
     updateEnv('TITLE', path.basename(process.env.MDL_PATH).slice(0,-4));
@@ -61,11 +61,11 @@ const build = async () => {
     fromScratch && await dbDir.reset();
     await dbDir.make();
     await dbDir.fill();
-    console.log('\nCompleted build');
+    console.log('\nCompleted prep');
 };
 
 if ( require.main === module ){
-    build();
+    prep();
 };
 
-module.exports = build;
+module.exports = prep;

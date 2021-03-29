@@ -4,10 +4,10 @@
     "description": "An app that generates and runs an interface on top of a system-dynamics model.",
     "main": "app.js",
     "scripts": {
-        "prepare": "node build",
-        "reset": "node build fromScratch",
+        "prepare": "node prep",
+        "reset": "node prep fromScratch",
         "start": "node app openAtStart",
-        "build-start": "node app mdlChanged openAtStart",
+        "prep-start": "node app mdlChanged openAtStart",
         "reset-start": "node app fromScratch mdlChanged openAtStart",
         "view": "node app viewMode",
         "dev": "nodemon -L app.js",

@@ -3,7 +3,7 @@ const fs = require("fs").promises;
 const appDir = path.resolve(__dirname,'..');
 const sdWeb = path.join(process.env.SD_PATH,'web');
 const dbDir = path.join(appDir,'db');
-const modLoc = './build/storage';
+const modLoc = './prep/storage';
     
 const copyPaste = async (from, to) => {
     try {

@@ -1,8 +1,8 @@
-// re-build if requested
+// re-prep if requested
 const mdlChanged = process.argv.includes('mdlChanged') || process.env.MDL_CHANGED;
-const buildDone = (async() => {
+const prepDone = (async() => {
     await (
-        mdlChanged && require('./build')()
+        mdlChanged && require('./prep')()
     );
 })();
 
@@ -35,8 +35,8 @@ viewMode = process.argv.includes('viewMode') || process.env.VIEW_MODE;
 
 // load routes based on databse 
 const loadDone = (async() => {
-    // wait for build bcs the db loads files written by build
-    await buildDone;
+    // wait for prep bcs the db loads files written by prep
+    await prepDone;
     // load database
     db = require('./load')();
     // load routes connected to the database
